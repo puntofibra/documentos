@@ -289,7 +289,10 @@ const API = 'https://script.google.com/macros/s/AKfycbxKTZN9gb-Tl3CRQFzl6WNPtOIq
 const BANDERAS = {
   'SUECIA':'se','SUIZA':'ch','ITALIA':'it','FRANCIA':'fr','ALEMANIA':'de','PAISES BAJOS':'nl','PAÍSES BAJOS':'nl','HOLANDA':'nl',
   'BELGICA':'be','BÉLGICA':'be','PORTUGAL':'pt','REINO UNIDO':'gb','ESPAÑA':'es','ESPANA':'es','AUSTRIA':'at','IRLANDA':'ie',
-  'POLONIA':'pl','DINAMARCA':'dk','NORUEGA':'no','FINLANDIA':'fi','GRECIA':'gr','RUMANIA':'ro','RUMANÍA':'ro','LUXEMBURGO':'lu'
+  'POLONIA':'pl','DINAMARCA':'dk','NORUEGA':'no','FINLANDIA':'fi','GRECIA':'gr','RUMANIA':'ro','RUMANÍA':'ro','LUXEMBURGO':'lu',
+  'ARGENTINA':'ar','COLOMBIA':'co','VENEZUELA':'ve','MEXICO':'mx','MÉXICO':'mx','PERU':'pe','PERÚ':'pe','CHILE':'cl','ECUADOR':'ec',
+  'BOLIVIA':'bo','PARAGUAY':'py','URUGUAY':'uy','BRASIL':'br','CUBA':'cu','REPUBLICA DOMINICANA':'do','REPÚBLICA DOMINICANA':'do',
+  'HONDURAS':'hn','NICARAGUA':'ni','EL SALVADOR':'sv','GUATEMALA':'gt','PANAMA':'pa','PANAMÁ':'pa','COSTA RICA':'cr','MARRUECOS':'ma','ESTADOS UNIDOS':'us'
 };
 const bandera = p => { const c = BANDERAS[String(p).trim().toUpperCase()]; return c ? `url(https://flagcdn.com/w160/${c}.png)` : 'none'; };
 
