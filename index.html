@@ -412,6 +412,7 @@ async function generarLote(){
   ocupado = true;
   const b = $('generar20'); b.disabled = true; b.classList.add('cargando');
   const b1 = $('generar'); b1.disabled = true;
+  const t = $('toast'); t.innerHTML = '⏳ Generando 20 clientes, tarda unos segundos…'; t.classList.remove('err'); t.classList.add('ver'); clearTimeout(tt);
   try {
     const d = await api({accion:'generarVarios', cantidad:20});
     loteActual = d.fichas;
