@@ -332,7 +332,7 @@ $('copiarTodo').onclick = e => {
   if (!fichaActual) return;
   const f = fichaActual;
   // nombre apellido1 [apellido2] documento fecha
-  const texto = [f.nombre, f.apellido1, f.apellido2, f.documento, f.nacimiento].filter(Boolean).join(' ');
+  const texto = [f.nombre, f.apellido1, f.apellido2, f.documento, f.nacimiento].filter(Boolean).join(' ').toLowerCase();
   copiar(texto, 'Ficha completa', e.currentTarget);
 };
 const escapar = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
