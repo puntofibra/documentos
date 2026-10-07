@@ -199,12 +199,42 @@ footer{text-align:center;color:var(--mute);font-size:12px;margin-top:40px;opacit
   .pais strong{font-size:20px}
 }
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+
+/* ---------- Login ---------- */
+.login{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px;background:rgba(5,6,13,.55);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);transition:opacity .45s,visibility .45s}
+.login.fuera{opacity:0;visibility:hidden}
+.login-box{position:relative;width:100%;max-width:380px;padding:34px 28px 28px;border:1px solid var(--line);border-radius:22px;background:var(--panel);box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 60px rgba(124,92,255,.18);text-align:center;animation:entra .6s cubic-bezier(.2,.9,.3,1.2)}
+.login-box .ico{width:64px;height:64px;margin:0 auto 16px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 0 40px rgba(124,92,255,.6)}
+.login-box h2{font-size:22px;font-weight:800;letter-spacing:.14em}
+.login-box p{color:var(--mute);font-size:13px;margin:6px 0 22px}
+.login-box input{width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--txt);font:600 18px 'JetBrains Mono',monospace;text-align:center;letter-spacing:.2em;outline:none;transition:.2s}
+.login-box input:focus{border-color:var(--a2);box-shadow:0 0 0 4px rgba(0,212,255,.15)}
+.login-box button{width:100%;margin-top:14px;padding:14px;border:0;border-radius:14px;cursor:pointer;color:#fff;font:700 15px Inter,sans-serif;letter-spacing:.04em;background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 10px 30px rgba(124,92,255,.4);transition:.2s}
+.login-box button:disabled{opacity:.6;cursor:wait}
+.login-err{min-height:18px;margin-top:12px;color:#ff5470;font-size:13px;font-weight:600}
+.login-box.mal{animation:tiembla .4s}
+@keyframes entra{from{opacity:0;transform:translateY(20px) scale(.96)}}
+@keyframes tiembla{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.salir{display:flex;align-items:center;gap:6px;padding:10px 14px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--mute);font:600 13px Inter,sans-serif;cursor:pointer;transition:.2s}
+.salir:hover{color:var(--txt);border-color:rgba(255,84,112,.5)}
+.salir svg{width:15px;height:15px}
 </style>
 </head>
 <body>
 <div class="aurora"><span></span><span></span><span></span></div>
 <div class="grid"></div>
 <canvas id="particulas"></canvas>
+
+<div class="login" id="login">
+  <form class="login-box" id="loginForm" autocomplete="off">
+    <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+    <h2>DOCUMENTOS</h2>
+    <p>Introduce tu clave para entrar</p>
+    <input type="password" id="clave" placeholder="••••••" autocomplete="current-password" required>
+    <button type="submit" id="entrar">Entrar</button>
+    <div class="login-err" id="loginErr"></div>
+  </form>
+</div>
 
 <div class="app">
   <header>
@@ -215,6 +245,7 @@ footer{text-align:center;color:var(--mute);font-size:12px;margin-top:40px;opacit
     <div class="der">
       <button class="instalar" id="instalar" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Instalar app</button>
       <div class="contador"><span class="dot" id="estado"></span> Fichas generadas <b id="total">—</b></div>
+      <button class="salir" id="salir" title="Cerrar sesión"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>Salir</button>
     </div>
   </header>
 
@@ -299,6 +330,10 @@ const bandera = p => { const c = BANDERAS[String(p).trim().toUpperCase()]; retur
 const $ = id => document.getElementById(id);
 let fichaActual = null;
 
+/* ======= Sesión ======= */
+let claveActual = '';
+try { claveActual = localStorage.getItem('docClave') || ''; } catch(_){}
+
 /* ======= JSONP ======= */
 function api(params){
   return new Promise((ok, ko) => {
@@ -306,9 +341,13 @@ function api(params){
     const s = document.createElement('script');
     const t = setTimeout(() => { limpiar(); ko(new Error('Tiempo de espera agotado')); }, 30000);
     function limpiar(){ clearTimeout(t); delete window[cb]; s.remove(); }
-    window[cb] = d => { limpiar(); d && d.ok ? ok(d) : ko(new Error((d && d.error) || 'Error')); };
+    window[cb] = d => {
+      limpiar();
+      if (d && d.auth === false && params.accion !== 'login') { cerrarSesion('Tu clave ya no es válida'); }
+      d && d.ok ? ok(d) : ko(new Error((d && d.error) || 'Error'));
+    };
     s.onerror = () => { limpiar(); ko(new Error('No se pudo conectar con el servidor')); };
-    s.src = API + '?' + new URLSearchParams({...params, cb, _: Date.now()});
+    s.src = API + '?' + new URLSearchParams({clave: claveActual, ...params, cb, _: Date.now()});
     document.body.appendChild(s);
   });
 }
@@ -465,7 +504,7 @@ $('copiarLista').onclick = e => {
 };
 $('generar20').onclick = generarLote;
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.repeat && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); generar(); }
+  if (e.key === 'Enter' && !e.repeat && $('login').classList.contains('fuera') && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); generar(); }
 });
 
 /* ======= Historial ======= */
@@ -553,7 +592,46 @@ function chispas(el){
   requestAnimationFrame(loop);
 })();
 
-cargarHistorial();
+/* ======= Login ======= */
+function abrirSesion(){
+  $('login').classList.add('fuera');
+  cargarHistorial();
+}
+function cerrarSesion(msg){
+  claveActual = '';
+  try { localStorage.removeItem('docClave'); } catch(_){}
+  $('clave').value = '';
+  $('loginErr').textContent = msg || '';
+  $('login').classList.remove('fuera');
+  setTimeout(() => $('clave').focus(), 300);
+}
+$('loginForm').onsubmit = async e => {
+  e.preventDefault();
+  const clave = $('clave').value.trim();
+  if (!clave) return;
+  const b = $('entrar'); b.disabled = true; b.textContent = 'Comprobando…'; $('loginErr').textContent = '';
+  try {
+    await api({accion:'login', clave});
+    claveActual = clave;
+    try { localStorage.setItem('docClave', clave); } catch(_){}
+    abrirSesion();
+  } catch(err){
+    $('loginErr').textContent = /conectar|espera/i.test(err.message) ? err.message : 'Clave incorrecta';
+    const box = $('loginForm'); box.classList.remove('mal'); void box.offsetWidth; box.classList.add('mal');
+    $('clave').select();
+  } finally {
+    b.disabled = false; b.textContent = 'Entrar';
+  }
+};
+$('salir').onclick = () => cerrarSesion();
+
+if (claveActual) {
+  // Clave recordada: entramos directamente y la validamos en segundo plano
+  $('login').classList.add('fuera');
+  api({accion:'login'}).then(cargarHistorial).catch(e => { if (!/conectar|espera/i.test(e.message)) cerrarSesion('Tu clave ya no es válida'); else cargarHistorial(); });
+} else {
+  setTimeout(() => $('clave').focus(), 300);
+}
 
 /* ======= PWA: instalación ======= */
 if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
