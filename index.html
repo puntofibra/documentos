@@ -62,7 +62,28 @@ header{display:flex;align-items:center;justify-content:space-between;gap:16px;ma
 .hero p{color:var(--mute);margin-top:12px;font-size:15px}
 
 /* ---------- Botón principal ---------- */
-.zona-btn{display:flex;justify-content:center;margin:30px 0 38px}
+.zona-btn{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin:30px 0 38px}
+.btn-gen.lote{background:linear-gradient(135deg,#ff3d9a,#b33dff 50%,var(--a1));box-shadow:0 10px 40px -8px rgba(255,61,154,.7),inset 0 1px 0 rgba(255,255,255,.3)}
+.btn-gen.lote:hover{box-shadow:0 18px 60px -8px rgba(255,61,154,.9)}
+.lote-panel{padding:22px;margin-bottom:24px;animation:aparece .5s ease forwards;opacity:0;transform:translateX(-10px)}
+.lote-cab{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.lote-cab h3{font-size:18px;font-weight:800}
+.lote-cab small{color:var(--mute);font-size:12px}
+.btn-copiar-lista{display:flex;align-items:center;gap:10px;border:0;cursor:pointer;padding:14px 22px;border-radius:14px;font:700 15px Inter,sans-serif;color:#05060d;
+  background:linear-gradient(135deg,var(--ok),var(--a2));box-shadow:0 8px 30px -6px rgba(43,255,158,.6);transition:transform .2s,box-shadow .2s}
+.btn-copiar-lista:hover{transform:translateY(-2px);box-shadow:0 14px 40px -6px rgba(43,255,158,.85)}
+.btn-copiar-lista svg{width:18px;height:18px}
+.btn-copiar-lista.hecho{background:linear-gradient(135deg,#fff,var(--ok))}
+.tabla-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--line)}
+.tabla-lote{width:100%;border-collapse:collapse;font-size:14px;white-space:nowrap}
+.tabla-lote th{text-align:left;padding:11px 14px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);background:rgba(255,255,255,.04);position:sticky;top:0}
+.tabla-lote td{padding:10px 14px;border-top:1px solid var(--line)}
+.tabla-lote tbody tr{cursor:pointer;transition:background .15s;animation:aparece .35s ease forwards;opacity:0;transform:translateX(-8px)}
+.tabla-lote tbody tr:hover{background:rgba(124,92,255,.1)}
+.tabla-lote td.doc{font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.06em;color:#fff}
+.tabla-lote td.n{color:var(--mute);font-family:'JetBrains Mono',monospace}
+.tabla-lote td.icc{color:var(--mute);opacity:.5}
+.tabla-lote .mini{display:inline-block;width:22px;height:15px;border-radius:3px;background:#1b1e36 center/cover;vertical-align:-2px;margin-right:8px}
 .btn-gen{position:relative;border:0;cursor:pointer;padding:20px 42px;border-radius:18px;font:700 17px Inter,sans-serif;color:#fff;letter-spacing:.02em;
   background:linear-gradient(135deg,var(--a1),#5b3dff 45%,var(--a2));box-shadow:0 10px 40px -8px rgba(124,92,255,.8),inset 0 1px 0 rgba(255,255,255,.3);
   transition:transform .2s cubic-bezier(.2,.9,.3,1.4),box-shadow .2s;overflow:hidden;display:flex;align-items:center;gap:12px}
@@ -207,7 +228,24 @@ footer{text-align:center;color:var(--mute);font-size:12px;margin-top:40px;opacit
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
       Generar nuevo cliente <span class="kbd">ENTER</span>
     </button>
+    <button class="btn-gen lote" id="generar20">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Generar 20 clientes
+    </button>
   </div>
+
+  <section class="panel lote-panel" id="lotePanel" hidden>
+    <div class="lote-cab">
+      <div><h3>Lote de <span id="loteN">20</span> clientes</h3><small>Al pegar en la hoja: Nombre · Apellido 1 · Apellido 2 · Documento · Nacimiento · (ICC vacío) · País</small></div>
+      <button class="btn-copiar-lista" id="copiarLista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copiar lista completa</button>
+    </div>
+    <div class="tabla-wrap">
+      <table class="tabla-lote">
+        <thead><tr><th>#</th><th>Nombre</th><th>Apellido 1</th><th>Apellido 2</th><th>Documento</th><th>Nacimiento</th><th>ICC</th><th>País</th></tr></thead>
+        <tbody id="loteBody"></tbody>
+      </table>
+    </div>
+  </section>
 
   <div class="contenido">
     <article class="panel ficha" id="ficha">
@@ -326,7 +364,8 @@ async function copiar(texto, etiqueta, btn){
   try { await navigator.clipboard.writeText(texto); }
   catch(_){ const t=document.createElement('textarea'); t.value=texto; t.style.position='fixed'; t.style.opacity='0'; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
   if (btn){ btn.classList.add('hecho'); setTimeout(() => btn.classList.remove('hecho'), 1400); chispas(btn); }
-  toast(`📋 ${etiqueta} copiado: <code>${escapar(texto.length > 40 ? texto.slice(0,40)+'…' : texto)}</code>`);
+  if (texto.includes('\n')) toast(`📋 ${etiqueta} copiada · lista para pegar`);
+  else toast(`📋 ${etiqueta} copiado: <code>${escapar(texto.length > 40 ? texto.slice(0,40)+'…' : texto)}</code>`);
 }
 $('copiarTodo').onclick = e => {
   if (!fichaActual) return;
@@ -365,6 +404,62 @@ async function generar(){
   }
 }
 $('generar').onclick = generar;
+
+/* ======= Generar 20 ======= */
+let loteActual = [];
+async function generarLote(){
+  if (ocupado) return;
+  ocupado = true;
+  const b = $('generar20'); b.disabled = true; b.classList.add('cargando');
+  const b1 = $('generar'); b1.disabled = true;
+  try {
+    const d = await api({accion:'generarVarios', cantidad:20});
+    loteActual = d.fichas;
+    pintarLote(loteActual);
+    pintar(loteActual[0]);
+    explosion();
+    $('total').textContent = d.total;
+    $('estado').classList.remove('off');
+    loteActual.slice().reverse().forEach((f, i) => agregarHistorial(f, i === loteActual.length - 1));
+    toast(`✅ ${loteActual.length} clientes generados`);
+  } catch(e){
+    toast('❌ ' + escapar(e.message), true);
+    $('estado').classList.add('off');
+  } finally {
+    ocupado = false; b.disabled = false; b.classList.remove('cargando'); b1.disabled = false;
+  }
+}
+function pintarLote(lista){
+  const panel = $('lotePanel');
+  panel.hidden = false; panel.style.animation = 'none'; void panel.offsetWidth; panel.style.animation = '';
+  $('loteN').textContent = lista.length;
+  const tb = $('loteBody'); tb.innerHTML = '';
+  lista.forEach((f, i) => {
+    const tr = document.createElement('tr');
+    tr.style.animationDelay = (i * 0.03) + 's';
+    const celdas = [
+      ['n', i + 1], ['', f.nombre], ['', f.apellido1], ['', f.apellido2 || ''],
+      ['doc', f.documento], ['', f.nacimiento], ['icc', '—'], ['pais', f.pais]
+    ];
+    celdas.forEach(([cls, v]) => {
+      const td = document.createElement('td'); if (cls) td.className = cls;
+      if (cls === 'pais') td.innerHTML = `<span class="mini" style="background-image:${bandera(v)}"></span>`;
+      td.appendChild(document.createTextNode(v));
+      tr.appendChild(td);
+    });
+    tr.title = 'Ver esta ficha';
+    tr.onclick = () => { pintar(f); $('ficha').scrollIntoView({behavior:'smooth', block:'start'}); };
+    tb.appendChild(tr);
+  });
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+}
+$('copiarLista').onclick = e => {
+  if (!loteActual.length) return;
+  // Una fila por cliente, columnas separadas por tabulador: al pegar en Sheets/Excel cae cada dato en su columna
+  const tsv = loteActual.map(f => [f.nombre, f.apellido1, f.apellido2 || '', f.documento, f.nacimiento, '', f.pais].join('\t')).join('\n');
+  copiar(tsv, `Lista de ${loteActual.length} clientes`, e.currentTarget);
+};
+$('generar20').onclick = generarLote;
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.repeat && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); generar(); }
 });
